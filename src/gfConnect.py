@@ -68,7 +68,6 @@ import bluepy.btle as btle
 import sys
 import getopt
 import time
-import string
 
 class ScanDelegate(btle.DefaultDelegate):
   def __init__(self):
@@ -84,11 +83,11 @@ class NotifyDelegate(btle.DefaultDelegate):
   def __init__(self):
     btle.DefaultDelegate.__init__(self)
 
-    def handleNotification(self, cHandle, data):
+  def handleNotification(self, cHandle, data):
     # ... perhaps check cHandle
     # ... process 'data'
-      print("cHandle: %s" % cHandle)
-      print("data: %s" % data)
+    print("cHandle: %s" % cHandle)
+    print("data: %s" % data)
 
 def pad_command(arg1):
   #GF Connect seems to require a max of 19 characters for commands
@@ -123,20 +122,18 @@ class Grainfather:
     if self.periphial:
       self.writechar.write(pad_command(cmd.encode()), False)
 
-  # FIXME: subscription not figured out yet
   def subscribe(self):
     if self.periphial:
-      handle = self.writechar.valHandle + 1
-      self.periphial.writeCharacteristic(handle, 
-        b"\x01\x00")
-      # "\x05\x00\x04\x00\x12\x0f\x00\x01\x00"
+      handle = self.notifychar.valHandle + 1
+      self.periphial.writeCharacteristic(handle, b"\x01\x00", withResponse=True)
       for i in range(10):
           self.periphial.waitForNotifications(1.0)
           time.sleep(0.1)
 
   def unsubscribe(self):
-    "FIXME: to be implemented"
-    pass
+    if self.periphial:
+      handle = self.notifychar.valHandle + 1
+      self.periphial.writeCharacteristic(handle, b"\x00\x00")
 
   def set_temp(self, temp):
     self.write("$%i," % temp)
